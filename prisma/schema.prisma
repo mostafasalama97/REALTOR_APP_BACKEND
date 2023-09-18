@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+} 
+
+datasource db {
+  provider = "postgresql" 
+  url      = env("DATABASE_URL")
+}
+
+// create model and prisma will convert it to table in database
+// i need 4 tables in database { home - message - user - photo } 
+
+// model home
+enum PropertyType {
+  RESIDENTIAL
+  CONDO
+}
+
+
+
+// each home have many image
+model Home{
+  id Int @id @default(autoincrement())
+  address String
+  number_of_bedrooms Int
+  number_of_bathrooms Int
+  city String
+  listed_date DateTime @default(now())
+  price Float
+  land_size Float
+  property_type PropertyType
+  image Image[]
+  realtor_id Int
+  realtor User @relation(fields: [realtor_id] , references: [id]) 
+  message Message[]
+}
+
+
+// model user
+// each realtor can display many home
+enum UserType {
+  REALTOR
+  BUYER
+  ADMIN
+}
+model User{
+  id Int @id @default(autoincrement())
+  name String
+  email String @unique()
+  password String
+  phone String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  user_type UserType
+  home Home[]
+  buyer_messages Message[] @relation("buyer_messages")
+  realtor_messages Message[] @relation("realtor_messages")
+}
+
+// model message
+// each home has many message
+// each buyer has many message
+// each realtor has many message
+model Message{
+  id Int @id @default(autoincrement())
+  message String
+  sent_at DateTime @default(now())
+  home_id Int
+  home Home @relation(fields: [home_id] , references: [id])
+
+  buyer_id Int
+  buyer User @relation("buyer_messages" , fields: [buyer_id] , references: [id])
+
+  realtor_id Int
+  realtor User @relation("realtor_messages" , fields: [realtor_id] , references: [id])
+
+}
+
+
+// model image
+model Image{
+  id Int @id @default(autoincrement())
+  image_url String
+  home_id Int
+  home Home @relation(fields: [home_id] , references: [id]) 
+}
+
